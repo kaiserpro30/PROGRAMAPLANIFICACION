@@ -1,42 +1,35 @@
-
 import streamlit as st
 import dropbox
 from dropbox.files import SearchOptions
 
+# Configuración de la página
 st.set_page_config(page_title="Revisión de OT", layout="wide")
+
+# Conexión a Dropbox
+dbx = dropbox.Dropbox("TU_ACCESS_TOKEN")
 
 st.title("📁 Revisión de OT")
 st.write("Busca, visualiza y descarga archivos desde una OT")
 
-# Autenticación con Dropbox
-DROPBOX_TOKEN = st.secrets["DROPBOX_TOKEN"] if "DROPBOX_TOKEN" in st.secrets else "YOUR_DROPBOX_ACCESS_TOKEN"
-dbx = dropbox.Dropbox(DROPBOX_TOKEN)
-
 # Pestañas
-tab1, tab2 = st.tabs(["🔍 Revisión de Archivos", "📷 Cargar Foto a OT"])
+tabs = st.tabs(["🔍 Revisión de Archivos", "📷 Cargar Foto a OT"])
 
-with tab1:
-    st.subheader("🔍 Buscar archivos en Dropbox")
-    archivo = st.text_input("🔍 Nombre del archivo a buscar:", "")
-    carpeta = st.text_input("📁 Carpeta dentro de Dropbox (ej: /Proyectos)", "/")
+with tabs[0]:
+    st.header("🔍 Buscar archivos en Dropbox")
+    nombre_archivo = st.text_input("🔎 Nombre del archivo a buscar:", "")
+    carpeta = st.text_input("📂 Carpeta dentro de Dropbox (ej: /Proyectos)", "/")
 
-    if st.button("Buscar archivo"):
+    if st.button("Buscar archivo") and nombre_archivo:
         try:
-            results = dbx.files_search_v2(
-                query=archivo,
-                options=SearchOptions(
-                    path=carpeta,
-                    max_results=100,
-                    filename_only=True
-                )
-            )
-            if results.matches:
-                st.success(f"🔎 Se encontraron {len(results.matches)} archivo(s):")
-                for match in results.matches:
-                    metadata = match.metadata.get_metadata()
-                    ruta = metadata.path_display
-                    st.markdown(f"- 📄 `{ruta}`")
+            search_options = SearchOptions(path=carpeta, max_results=100, filename_only=True)
+            result = dbx.files_search_v2(query=nombre_archivo, options=search_options)
+            matches = result.matches
+            if matches:
+                st.success(f"Se encontraron {len(matches)} archivo(s):")
+                for m in matches:
+                    metadata = m.metadata.get_metadata()
+                    st.write(f"📄 {metadata.name}")
             else:
-                st.warning("⚠️ No se encontraron archivos.")
+                st.warning("No se encontraron archivos.")
         except Exception as e:
             st.error(f"❌ Error al buscar: {e}")
