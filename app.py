@@ -7,8 +7,8 @@ from dropbox.exceptions import ApiError
 
 st.set_page_config(page_title="Revisión de OT", layout="wide", page_icon="📁")
 
-st.title("📂 Revisión de OT")
-st.write("Busca, visualiza y descarga archivos desde Dropbox")
+st.title("📁 Revisión de OT")
+st.write("Busca archivos relacionados con órdenes de trabajo")
 
 ACCESS_TOKEN = st.secrets["dropbox"]["access_token"]
 dbx = dropbox.Dropbox(ACCESS_TOKEN)
