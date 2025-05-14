@@ -27,7 +27,7 @@ def buscar_archivos(nombre, carpeta=""):
     try:
         resultados = dbx.files_search_v2(
             query=nombre,
-            options=SearchOptions(path=carpeta, filename_only=True)
+            options=dropbox.files.SearchOptions(path=carpeta, filename_only=True)
         )
         archivos = [match.metadata.get_metadata() for match in resultados.matches]
         return archivos
@@ -40,7 +40,7 @@ with tab1:
     st.subheader("🔎 Buscar archivos")
     col1, col2 = st.columns(2)
     nombre = col1.text_input("🔍 Nombre del archivo a buscar")
-    carpeta = col2.text_input("📁 Carpeta dentro de Dropbox", "/")
+    carpeta = col2.text_input("📁 Carpeta dentro de Dropbox", "")
 
     if st.button("Buscar"):
         resultados = buscar_archivos(nombre, carpeta)
@@ -67,7 +67,7 @@ with tab1:
 with tab2:
     st.subheader("📷 Tomar y guardar foto")
     carpetas = obtener_todas_las_carpetas()
-    destino = st.selectbox("📁 Selecciona carpeta destino:", carpetas) if carpetas else None
+    destino = st.selectbox("📁 Selecciona carpeta destino:", carpetas if carpetas else [""])", carpetas) if carpetas else None
     nombre_foto = st.text_input("📝 Nombre del archivo (sin extensión)", f"foto_{datetime.now().strftime('%Y%m%d_%H%M%S')}")
     imagen = st.camera_input("📸 Captura desde cámara")
 
