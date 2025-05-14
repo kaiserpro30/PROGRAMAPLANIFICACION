@@ -6,13 +6,10 @@ import requests
 from dropbox.files import SearchOptions
 from dropbox.exceptions import ApiError
 
-# ✅ Debe ser lo primero después de los imports
-st.set_page_config(page_title="Revisión de OT", layout="wide", page_icon="📁")
+st.set_page_config(page_title="Revisión de OT", layout="wide", page_icon="📁")  # 👈 DEBE IR AQUÍ
 
-# Mostrar logo de Inamar Vapor
 st.image("logo_inamar.png", width=180)
 
-# Franja azul con nombre del área
 st.markdown(
     """
     <div style="background-color:#003366; padding:10px">
