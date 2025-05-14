@@ -6,6 +6,8 @@ import requests
 from dropbox.files import SearchOptions
 from dropbox.exceptions import ApiError
 
+st.set_page_config(page_title="Revisión de OT", layout="wide", page_icon="📁")
+
 # Mostrar logo de Inamar Vapor
 st.image("logo_inamar.png", width=180)
 
