@@ -3,6 +3,7 @@ import dropbox
 import pandas as pd
 import requests
 from dropbox.files import SearchOptions
+from dropbox.exceptions import ApiError
 
 st.set_page_config(page_title="Revisión de OT", layout="wide", page_icon="📁")
 
@@ -54,7 +55,15 @@ if st.button("Buscar"):
                     st.write(f"🕒 Fecha modificación: `{fila['Fecha modif.']}`")
 
                     try:
-                        enlace = dbx.sharing_create_shared_link_with_settings(fila['Ruta']).url
+                        try:
+                            enlace = dbx.sharing_create_shared_link_with_settings(fila['Ruta']).url
+                        except ApiError as e:
+                            if "shared_link_already_exists" in str(e):
+                                enlaces = dbx.sharing_list_shared_links(path=fila['Ruta'], direct_only=True)
+                                enlace = enlaces.links[0].url
+                            else:
+                                raise e
+
                         enlace_vista = enlace.replace("?dl=0", "?raw=1")
                         enlace_descarga = enlace.replace("?dl=0", "?dl=1")
 
