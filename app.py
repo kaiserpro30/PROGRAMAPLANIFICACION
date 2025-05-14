@@ -2,7 +2,6 @@ import streamlit as st
 import dropbox
 import pandas as pd
 import requests
-import tempfile
 from dropbox.files import SearchOptions
 
 st.set_page_config(page_title="Revisión de OT", layout="wide", page_icon="📁")
@@ -61,14 +60,10 @@ if st.button("Buscar"):
 
                         st.markdown(f"[🔗 Ver archivo]({enlace_vista})  |  [⬇️ Descargar {fila['Nombre']}]({enlace_descarga})", unsafe_allow_html=True)
 
-                        if fila["Extensión"] in ["pdf"]:
+                        if fila["Extensión"] == "pdf":
                             st.markdown(f'<iframe src="{enlace_vista}" width="100%" height="500px"></iframe>', unsafe_allow_html=True)
-                        elif fila["Extensión"] in ["doc", "docx"]:
-                            st.markdown(f'<iframe src="https://view.officeapps.live.com/op/view.aspx?src={enlace_vista}" width="100%" height="500px"></iframe>', unsafe_allow_html=True)
-                        elif fila["Extensión"] in ["xlsx", "xls"]:
-                            st.write("📌 Vista previa de Excel no disponible. Usa el botón de descarga para abrir el archivo.")
                         else:
-                            st.write("🔍 Vista previa no compatible para este tipo de archivo.")
+                            st.info("Vista previa solo disponible para archivos PDF. Use el botón de descarga.")
 
                     except Exception as e:
                         st.error(f"No se pudo generar el enlace: {e}")
