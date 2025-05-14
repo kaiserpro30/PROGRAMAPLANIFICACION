@@ -1,35 +1,80 @@
 import streamlit as st
 import dropbox
-from dropbox.files import SearchOptions
+import pandas as pd
+from datetime import datetime
+from dropbox.files import FolderMetadata, SearchOptions, WriteMode
 
-# Configuración de la página
-st.set_page_config(page_title="Revisión de OT", layout="wide")
+st.set_page_config(page_title="Revisión de OT", layout="wide", page_icon="📁")
+ACCESS_TOKEN = st.secrets["dropbox"]["access_token"]
+dbx = dropbox.Dropbox(ACCESS_TOKEN)
 
-# Conexión a Dropbox
-dbx = dropbox.Dropbox("sl.u.AFt16JPPY-Q_CmKf_CWNXn7PZgARG1c3Uq2QMD2Lk2MD-1AD7iirnW0l6MCFWtssG4Y-DAKDKHetw-hSsqOj_9Ke7nOtVCWqm40DQAqFhWGNq-2qaTnfcXZBilxUWmPY6coK7FhgBTPjldaqCTcdD7zJ-B78QB9flGoBcfxjgammftK8D1SJZFsmx89CDvaJxfZir3MUcBq5yRhKk4eWcwXoS0PZLNLOvfjH65l-_PbTxu0LDapKI8d5Uq2UGjuz4aEGKpkPABYQVy4EDj_bHC6Tymi75x46VZ7Op3fjWn9RVu-OdnxQz2qVSa8UDR-9FfIXIObokgbQOb7Fpkv1EWM-MZhk7rHY3nOOl-bwRtSbZLvZiXKkXvzGxFUOooonMJtav4dujPvnPIsNE0RDDRiADCYIYzlBRJJ_S1ITMukz7wAAYjuBXihVR9VYvVcYXE13KlLq2aVhIVCCiSZdeREOBr7wG9uYn-6ojKLExIrvShoRIvYZXd6YnMzI_2nIjtxeYYr3wcH7KKNPGQejUgDOq58ZcN4iO9CWy_Q4Q_OtMzZTW446MZuU6PfbnoKPQsi5T5l1KpPKfD-4fV4YFM18q2hrVjni5vktVIq5eTP6P0_TNIaZZBlAfF4i2hpSLXad2e41B5Zr9DH-q7ZbPAn-Nx-Icw6vbY3yIyHfEJaqXIde6SSe2r_X4icd7yCFOurP-zTYhKj9yPzuswguANMk37zq7HQGL72fvf0gbIM1QNp51gq76LsMx5Bh9wOiQfCaDPGhmR91YrKoKlCMzk8XWfSJQevxC68rV89OpgA8G4G_dfclabrw0F6UtS9IudLWPUsLLK8ocxMFtwYjHZe_TKz0tiD3LeNG6w_STS7AjA0XLl9aHxGUF4j1rs3HQiJ4usIFVjfdHRGTQta6SAmhue3rE87stvKRMeFp85JIlAlxr68hOWYXZxGHKGsIlkh9__ujat-g6SP_HbcO0qHHxB9YlRxp8mQLH3dSxX7911uPEAfeNEc7-8nyWczXdZyWre-M3d5N65GLbn3vPblNFWQ5pBAZCId9inCvkFpaBIhiAeacmLmDoL3LySNebmjsPtIOJ7b5DAiZR76wNqNrRowOPFvw1-or5jgk3u_LAIY3nJSAP9h51glVZIuUuzeuPkTSYrhcx00HMC92x_A97OPA83jLM5QUqiVVIwf8BnNBGnnoipJHw2ASy2OiMRFppkKsqEo2dw1qAwvGB7Bn4Lhz8gk-zq4wnuaws9nYgSAPdmAcBo99vVhaRP4GuWhtKFlM34x2qrlhNYXKJY_O8IvaxX-2woIIJWcavjbnLqH7tNjLBTn6qFerh4iav9VNpoKCoiLtt3-qq7gGIRfNr0pD4s3QMfw8eOIDEdFNiXGuhmKNSjG7XleK_qIEqAo9lercZFsZwAofxIgZOexzH5TGUHX72YOjczFKccE2rLz8jU9mDudK4DAnvn7oNAU")
-
+st.image("logo_inamar.png", width=180)
+st.markdown('<div style="background-color:#003366; padding:10px"><h1 style="color:white; text-align:center;">Área Planificación</h1></div>', unsafe_allow_html=True)
 st.title("📁 Revisión de OT")
 st.write("Busca, visualiza y descarga archivos desde una OT")
 
-# Pestañas
-tabs = st.tabs(["🔍 Revisión de Archivos", "📷 Cargar Foto a OT"])
+tab1, tab2 = st.tabs(["🔍 Revisión de Archivos", "📸 Cargar Foto a OT"])
 
-with tabs[0]:
-    st.header("🔍 Buscar archivos en Dropbox")
-    nombre_archivo = st.text_input("🔎 Nombre del archivo a buscar:", "")
-    carpeta = st.text_input("📂 Carpeta dentro de Dropbox (ej: /Proyectos)", "/")
+def obtener_todas_las_carpetas():
+    try:
+        resultado = dbx.files_list_folder("", recursive=True)
+        return [e.path_display for e in resultado.entries if isinstance(e, FolderMetadata)]
+    except Exception as e:
+        st.error(f"No se pudo cargar la lista de carpetas: {e}")
+        return []
 
-    if st.button("Buscar archivo") and nombre_archivo:
+def buscar_archivos(nombre, carpeta=""):
+    try:
+        resultados = dbx.files_search_v2(
+            query=nombre,
+            options=SearchOptions(path=carpeta, filename_only=True)
+        )
+        archivos = [match.metadata.get_metadata() for match in resultados.matches]
+        return archivos
+    except Exception as e:
+        st.error(f"Error al buscar: {e}")
+        return []
+
+# TAB 1: Buscar archivos
+with tab1:
+    st.subheader("🔎 Buscar archivos")
+    col1, col2 = st.columns(2)
+    nombre = col1.text_input("🔍 Nombre del archivo a buscar")
+    carpeta = col2.text_input("📁 Carpeta dentro de Dropbox", "/")
+
+    if st.button("Buscar"):
+        resultados = buscar_archivos(nombre, carpeta)
+        if resultados:
+            st.success(f"{len(resultados)} archivo(s) encontrados")
+            for archivo in resultados:
+                st.markdown(f"**📄 {archivo.name}**")
+                st.write(f"📁 Carpeta: `{archivo.path_display.rsplit('/', 1)[0]}`")
+                st.write(f"🕒 Modificado: {archivo.client_modified.strftime('%Y-%m-%d %H:%M')}")
+                try:
+                    link = dbx.sharing_create_shared_link_with_settings(archivo.path_display).url
+                    vista = link.replace("?dl=0", "?raw=1")
+                    descarga = link.replace("?dl=0", "?dl=1")
+                    st.markdown(f"[🔗 Ver archivo]({vista}) | [⬇️ Descargar]({descarga})", unsafe_allow_html=True)
+                    if archivo.name.lower().endswith(".pdf"):
+                        st.markdown(f'<iframe src="{vista}" width="100%" height="400"></iframe>', unsafe_allow_html=True)
+                except:
+                    st.warning("No se pudo generar el enlace para este archivo.")
+                st.markdown("---")
+        else:
+            st.info("No se encontraron archivos.")
+
+# TAB 2: Tomar foto y guardar
+with tab2:
+    st.subheader("📷 Tomar y guardar foto")
+    carpetas = obtener_todas_las_carpetas()
+    destino = st.selectbox("📁 Selecciona carpeta destino:", carpetas) if carpetas else None
+    nombre_foto = st.text_input("📝 Nombre del archivo (sin extensión)", f"foto_{datetime.now().strftime('%Y%m%d_%H%M%S')}")
+    imagen = st.camera_input("📸 Captura desde cámara")
+
+    if imagen and destino and nombre_foto:
+        ruta_final = f"{destino}/{nombre_foto}.jpg"
         try:
-            search_options = SearchOptions(path=carpeta, max_results=100, filename_only=True)
-            result = dbx.files_search_v2(query=nombre_archivo, options=search_options)
-            matches = result.matches
-            if matches:
-                st.success(f"Se encontraron {len(matches)} archivo(s):")
-                for m in matches:
-                    metadata = m.metadata.get_metadata()
-                    st.write(f"📄 {metadata.name}")
-            else:
-                st.warning("No se encontraron archivos.")
+            dbx.files_upload(imagen.getvalue(), ruta_final, mode=WriteMode("overwrite"))
+            st.success(f"✅ Foto guardada en: `{ruta_final}`")
         except Exception as e:
-            st.error(f"❌ Error al buscar: {e}")
+            st.error(f"❌ Error al guardar imagen: {e}")
