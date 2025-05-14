@@ -49,11 +49,7 @@ with tab1:
             for archivo in resultados:
                 st.markdown(f"**📄 {archivo.name}**")
                 st.write(f"📁 Carpeta: `{archivo.path_display.rsplit('/', 1)[0]}`")
-                fecha_mod = getattr(archivo, "client_modified", None) or getattr(archivo, "server_modified", None)
-            if fecha_mod:
-                st.write(f"🕒 Modificado: {fecha_mod.strftime('%Y-%m-%d %H:%M')}")
-            else:
-                st.write("🕒 Fecha de modificación no disponible")
+                st.write(f"🕒 Modificado: {archivo.client_modified.strftime('%Y-%m-%d %H:%M')}")
                 try:
                     link = dbx.sharing_create_shared_link_with_settings(archivo.path_display).url
                     vista = link.replace("?dl=0", "?raw=1")
