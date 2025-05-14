@@ -1,5 +1,2 @@
 streamlit
 dropbox
-pandas
-requests
-openpyxl
