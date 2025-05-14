@@ -1,3 +1,4 @@
+
 import streamlit as st
 import dropbox
 import pandas as pd
@@ -5,10 +6,22 @@ import requests
 from dropbox.files import SearchOptions
 from dropbox.exceptions import ApiError
 
-st.set_page_config(page_title="Revisión de OT", layout="wide", page_icon="📁")
+# Mostrar logo de Inamar Vapor
+st.image("logo_inamar.png", width=180)
 
+# Franja azul con nombre del área
+st.markdown(
+    """
+    <div style="background-color:#003366; padding:10px">
+        <h1 style="color:white; text-align:center;">Área Planificación</h1>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
+
+st.set_page_config(page_title="Revisión de OT", layout="wide", page_icon="📁")
 st.title("📁 Revisión de OT")
-st.write("Busca archivos relacionados con órdenes de trabajo")
+st.write("Busca, visualiza y descarga archivos desde una OT")
 
 ACCESS_TOKEN = st.secrets["dropbox"]["access_token"]
 dbx = dropbox.Dropbox(ACCESS_TOKEN)
