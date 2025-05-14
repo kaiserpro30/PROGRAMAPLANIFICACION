@@ -21,7 +21,7 @@ tab1, tab2 = st.tabs(["🔍 Revisión de Archivos", "📸 Cargar Foto a OT"])
 def obtener_todas_las_carpetas(base="/"):
     carpetas = []
     try:
-        resultado = dbx.files_list_folder(base, recursive=True)
+        resultado = dbx.files_list_folder('' if base == '/' else base, recursive=True)
         for entry in resultado.entries:
             if isinstance(entry, FolderMetadata):
                 carpetas.append(entry.path_display)
