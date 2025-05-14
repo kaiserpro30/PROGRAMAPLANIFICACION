@@ -1,81 +1,53 @@
 import streamlit as st
 import dropbox
-import pandas as pd
 from datetime import datetime
-from dropbox.files import FolderMetadata, SearchOptions, WriteMode
+from PIL import Image
 
+# Configurar la página
 st.set_page_config(page_title="Revisión de OT", layout="wide", page_icon="📁")
-ACCESS_TOKEN = st.secrets["dropbox"]["access_token"]
-dbx = dropbox.Dropbox(ACCESS_TOKEN)
 
-st.image("logo_inamar.png", width=180)
-st.markdown('<div style="background-color:#003366; padding:10px"><h1 style="color:white; text-align:center;">Área Planificación</h1></div>', unsafe_allow_html=True)
-st.title("📁 Revisión de OT")
-st.write("Busca, visualiza y descarga archivos desde una OT")
+# Cargar el logo
+logo = "logo_inamar.png"
+col1, col2 = st.columns([1, 8])
+with col1:
+    st.image(logo, width=100)
+with col2:
+    st.markdown("<h1 style='color: white; background-color: #003865; padding: 10px;'>Área Planificación</h1>", unsafe_allow_html=True)
 
-tab1, tab2 = st.tabs(["🔍 Revisión de Archivos", "📸 Cargar Foto a OT"])
+# Separador visual
+st.markdown("---")
 
-def obtener_todas_las_carpetas():
-    try:
-        resultado = dbx.files_list_folder("", recursive=True)
-        return [e.path_display for e in resultado.entries if isinstance(e, FolderMetadata)]
-    except Exception as e:
-        st.error(f"No se pudo cargar la lista de carpetas: {e}")
-        return []
+# Autenticación de Dropbox (el token debe estar seguro)
+DROPBOX_TOKEN = st.secrets["DROPBOX_TOKEN"]
+dbx = dropbox.Dropbox(DROPBOX_TOKEN)
 
-def buscar_archivos(nombre, carpeta=""):
-    try:
-        resultados = dbx.files_search_v2(
-            query=nombre,
-            options=SearchOptions(path=carpeta, filename_only=True)
-        )
-        archivos = [match.metadata.get_metadata() for match in resultados.matches]
-        return archivos
-    except Exception as e:
-        st.error(f"Error al buscar: {e}")
-        return []
+# Pestañas
+tabs = st.tabs(["📂 Revisión de Archivos", "📸 Cargar Foto a OT"])
 
-# TAB 1: Buscar archivos
-with tab1:
-    st.subheader("🔎 Buscar archivos")
-    col1, col2 = st.columns(2)
-    nombre = col1.text_input("🔍 Nombre del archivo a buscar")
-    carpeta = col2.text_input("📁 Carpeta dentro de Dropbox", "/")
+# --- TAB 1: Revisión de Archivos ---
+with tabs[0]:
+    st.subheader("🔍 Buscar archivos")
+
+    nombre_archivo = st.text_input("🔎 Nombre del archivo a buscar")
+    carpeta_busqueda = st.text_input("📂 Carpeta dentro de Dropbox", value="/")
 
     if st.button("Buscar"):
-        resultados = buscar_archivos(nombre, carpeta)
-        if resultados:
-            st.success(f"{len(resultados)} archivo(s) encontrados")
-            for archivo in resultados:
-                st.markdown(f"**📄 {archivo.name}**")
-                st.write(f"📁 Carpeta: `{archivo.path_display.rsplit('/', 1)[0]}`")
-                fecha_modificacion = getattr(archivo, 'client_modified', None) or archivo.server_modified
-    st.write(f"🕒 Modificado: {fecha_modificacion.strftime('%Y-%m-%d %H:%M')}")
-                try:
-                    link = dbx.sharing_create_shared_link_with_settings(archivo.path_display).url
-                    vista = link.replace("?dl=0", "?raw=1")
-                    descarga = link.replace("?dl=0", "?dl=1")
-                    st.markdown(f"[🔗 Ver archivo]({vista}) | [⬇️ Descargar]({descarga})", unsafe_allow_html=True)
-                    if archivo.name.lower().endswith(".pdf"):
-                        st.markdown(f'<iframe src="{vista}" width="100%" height="400"></iframe>', unsafe_allow_html=True)
-                except:
-                    st.warning("No se pudo generar el enlace para este archivo.")
-                st.markdown("---")
-        else:
-            st.info("No se encontraron archivos.")
-
-# TAB 2: Tomar foto y guardar
-with tab2:
-    st.subheader("📷 Tomar y guardar foto")
-    carpetas = obtener_todas_las_carpetas()
-    destino = st.selectbox("📁 Selecciona carpeta destino:", carpetas) if carpetas else None
-    nombre_foto = st.text_input("📝 Nombre del archivo (sin extensión)", f"foto_{datetime.now().strftime('%Y%m%d_%H%M%S')}")
-    imagen = st.camera_input("📸 Captura desde cámara")
-
-    if imagen and destino and nombre_foto:
-        ruta_final = f"{destino}/{nombre_foto}.jpg"
         try:
-            dbx.files_upload(imagen.getvalue(), ruta_final, mode=WriteMode("overwrite"))
-            st.success(f"✅ Foto guardada en: `{ruta_final}`")
+            resultados = dbx.files_search_v2(query=nombre_archivo, options=dropbox.files.SearchOptions(path=carpeta_busqueda)).matches
+            if resultados:
+                st.success(f"{len(resultados)} archivo(s) encontrados")
+                for archivo_metadata in resultados:
+                    archivo = archivo_metadata.metadata.get_metadata()
+                    st.markdown(f"**📄 {archivo.name}**")
+                    st.write(f"📁 Carpeta: `{archivo.path_display.rsplit('/', 1)[0]}`")
+                    fecha_modificacion = getattr(archivo, 'client_modified', None) or archivo.server_modified
+                    st.write(f"🕒 Modificado: {fecha_modificacion.strftime('%Y-%m-%d %H:%M')}")
+                    try:
+                        link = dbx.sharing_create_shared_link_with_settings(archivo.path_display).url
+                        st.markdown(f"[🔗 Descargar archivo]({link})")
+                    except Exception as e:
+                        st.warning("No se pudo generar el enlace de descarga.")
+            else:
+                st.warning("No se encontraron archivos.")
         except Exception as e:
-            st.error(f"❌ Error al guardar imagen: {e}")
+            st.error(f"❌ Error al buscar: {e}")
