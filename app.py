@@ -6,6 +6,7 @@ import requests
 from dropbox.files import SearchOptions
 from dropbox.exceptions import ApiError
 
+# ✅ Debe ser lo primero después de los imports
 st.set_page_config(page_title="Revisión de OT", layout="wide", page_icon="📁")
 
 # Mostrar logo de Inamar Vapor
@@ -21,7 +22,6 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-st.set_page_config(page_title="Revisión de OT", layout="wide", page_icon="📁")
 st.title("📁 Revisión de OT")
 st.write("Busca, visualiza y descarga archivos desde una OT")
 
