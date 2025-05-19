@@ -3,22 +3,22 @@ import streamlit as st
 import dropbox
 from dropbox.files import SearchOptions, FileMetadata
 
-st.set_page_config(page_title="Revisión de OT", layout="wide")
+st.set_page_config(page_title="Revision de OT", layout="wide")
 
-st.title("📁 Revisión de OT")
+st.title("Revision de OT")
 st.write("Busca, visualiza y descarga archivos desde una OT")
 
-# Autenticación con Dropbox
+# Autenticacion con Dropbox
 DROPBOX_TOKEN = st.secrets["DROPBOX_TOKEN"] if "DROPBOX_TOKEN" in st.secrets else "YOUR_DROPBOX_ACCESS_TOKEN"
 dbx = dropbox.Dropbox(DROPBOX_TOKEN)
 
 # Pestañas
-tab1, tab2 = st.tabs(["🔍 Revisión de Archivos", "📷 Cargar Foto a OT"])
+tab1, tab2 = st.tabs(["Revision de Archivos", "Cargar Foto a OT"])
 
 with tab1:
-    st.subheader("🔍 Buscar archivos en Dropbox")
-    archivo = st.text_input("🔍 Nombre del archivo a buscar:", "")
-    carpeta = st.text_input("📁 Carpeta dentro de Dropbox (ej: /Proyectos)", "/")
+    st.subheader("Buscar archivos en Dropbox")
+    archivo = st.text_input("Nombre del archivo a buscar:", "")
+    carpeta = st.text_input("Carpeta dentro de Dropbox (ej: /Proyectos)", "/")
 
     if st.button("Buscar archivo"):
         try:
@@ -36,20 +36,20 @@ with tab1:
             archivos_validos = [m for m in matches if isinstance(m.metadata.get_metadata(), FileMetadata)]
 
             if archivos_validos:
-                st.success(f"🔎 Se encontraron {len(archivos_validos)} archivo(s):")
+                st.success(f"Se encontraron {len(archivos_validos)} archivo(s):")
                 for match in archivos_validos:
                     metadata = match.metadata.get_metadata()
                     ruta = metadata.path_display
                     fecha_mod = metadata.client_modified.strftime('%Y-%m-%d %H:%M')
                     enlace = dbx.files_get_temporary_link(ruta).link
 
-                    st.markdown(f"- 📄 `{ruta}`  
-                    🕓 Modificado: {fecha_mod}  
-                    [📥 Descargar]({enlace})")
+                    st.markdown(f"- Archivo: `{ruta}`")
+                    st.write(f"  Modificado: {fecha_mod}")
+                    st.markdown(f"[Descargar archivo]({enlace})")
             else:
-                st.warning("⚠️ No se encontraron archivos.")
+                st.warning("No se encontraron archivos.")
 
         except dropbox.exceptions.ApiError as api_err:
-            st.error(f"❌ Error de Dropbox API: {api_err}")
+            st.error(f"Error de Dropbox API: {api_err}")
         except Exception as e:
-            st.error(f"❌ Error inesperado: {e}")
+            st.error(f"Error inesperado: {e}")
